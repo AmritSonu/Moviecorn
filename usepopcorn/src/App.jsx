@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const tempMovieData = [
   {
@@ -51,15 +51,16 @@ const tempWatchedData = [
 ];
 
 // App logo
-function NavBar() {
+function NavBar({ movies, query, setQuery }) {
   return (
     <nav className="nav-bar">
       <Logo />
-      <SearchBar />
-      <SearchResult />
+      <SearchBar query={query} setQuery={setQuery} />
+      <SearchResult movies={movies} />
     </nav>
   );
 }
+
 // Logo for App
 function Logo() {
   return (
@@ -70,9 +71,7 @@ function Logo() {
   );
 }
 // SearchBar for movie Search
-function SearchBar() {
-  const [query, setQuery] = useState("");
-
+function SearchBar({ query, setQuery }) {
   return (
     <input
       className="search"
@@ -87,28 +86,77 @@ function SearchBar() {
 function SearchResult() {
   return (
     <p className="num-results">
-      Found <strong>X</strong> results
+      Found <strong></strong> results
     </p>
   );
 }
 
 // The Main Component or Brain of the this web-App...
 export default function App() {
-  const [movies, setMovies] = useState(tempMovieData);
+  const [movies, setMovies] = useState([]);
+  const [query, setQuery] = useState("new");
   const [watched, setWatched] = useState(tempWatchedData);
+  const [isLoading, setIsloading] = useState(false);
+  const [error, setError] = useState("");
+  const apiKey = "41804e3e";
+  useEffect(() => {
+    const fetchMovieData = async () => {
+      setIsloading(true);
+      setError(""); // Clear any previous errors
+      const apiKey = "41804e3e";
+      try {
+        const res = await fetch(
+          `https://www.omdbapi.com/?i=tt3896198&apikey=${apiKey}&s=${query}`
+        );
+        if (!res.ok) {
+          throw new Error("Not Fetched!");
+        }
+        const data = await res.json();
+        console.log(data);
+        if (data.Response === "False") {
+          setError("⛔ Movie not found!");
+        } else {
+          setMovies(data.Search);
+        }
+      } catch (err) {
+        console.error(err);
+        setError("An error occurred while fetching data.");
+      } finally {
+        setIsloading(false);
+      }
+    };
+
+    fetchMovieData();
+  }, [query]);
 
   return (
     <>
-      <NavBar />
+      <NavBar movies={movies} query={query} setQuery={setQuery} />
       <main className="main">
         <Toggler>
-          <SearchedResult movies={movies} />
+          {isLoading && <Loader />}
+          {!isLoading && !error && <SearchedResult movies={movies} />}
+          {error && <Error error={error} />}
         </Toggler>
         <Toggler>
           <WatchedResult watched={watched} />
         </Toggler>
       </main>
     </>
+  );
+}
+function Loader() {
+  return (
+    <div className="loader">
+      <p>Loading...</p>
+    </div>
+  );
+}
+function Error({ error }) {
+  return (
+    <div className="loader">
+      <p>{error}</p>
+    </div>
   );
 }
 // Given Searched Result is Here's COmponent...
