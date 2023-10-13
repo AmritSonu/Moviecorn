@@ -12,6 +12,7 @@ export default function StarRating({
   maxRating = 5,
   color = "#fff000",
   size = "48",
+  onSetRating,
 }) {
   const StarText = {
     textHeight: "1",
@@ -22,6 +23,7 @@ export default function StarRating({
   const [rating, setRating] = useState(0);
   const [tempRating, settempRating] = useState(0);
   function handleRating(onRate) {
+    onSetRating(tempRating);
     setRating(onRate);
   }
   return (
